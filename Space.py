@@ -1,6 +1,6 @@
-from pyglet.gl import *
 from pyglet.window import Window
 from pyglet.window import key
+from pyglet.text import Label
 import random
 import pyglet
 
@@ -29,8 +29,15 @@ class PlayerShip:
         if (symbol==key.RIGHT and symbol==key.LEFT) or (symbol==key.NUM_4 and symbol==key.NUM_6):
             self.left=False
             self.right=False
-        self.set_bound()
-        self.move()
+
+class Laser:
+    def __init__(self,x,y):
+        self.x=x
+        self.y=y
+        self.sprite=pyglet.sprite.Sprite(img=pyglet.image.load(""),x=self.x,y=self.y)
+        self.state=False
+    def draw():
+        pass
 
 
 class GameWindow(Window):
@@ -38,13 +45,17 @@ class GameWindow(Window):
         super().__init__(*args,**kwargs)
         self.set_caption("Xavier's Game")
         self.set_location(300,200)
-#bg
+#background objects
         self.bg_list=[]
 
         self.bg_list.append(pyglet.sprite.Sprite(img=pyglet.image.load("maxresdefault.jpg"),x=0,y=0))
         self.bg_list.append(pyglet.sprite.Sprite(img=pyglet.image.load("maxresdefault.jpg"),x=0,y=700))
-#player
+#player object
         self.player=PlayerShip()
+#game window properties
+        self.move_state=1
+        self.game_states=['',True,False]
+        self.pause_lbl=Label(text="Paused",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
 
     def spr_update(self):
         for spr in self.bg_list:
@@ -59,14 +70,26 @@ class GameWindow(Window):
     def on_draw(self):
         self.bg_draw()
         self.player.draw()
+        if not self.game_states[self.move_state]:
+            self.pause_lbl.draw()
 
     def on_key_press(self,symbol,modifiers):
+        if symbol==key.ENTER :
+            self.move_state*=-1
         self.player.key_press(symbol,modifiers)
 
-    def update(self,dt):
-        self.spr_update()
+    def on_key_release(self,symbol,modifiers):
+        if symbol==key.LEFT or symbol==key.NUM_4:
+            self.player.left=False
+        if symbol==key.RIGHT or symbol==key.NUM_6:
+            self.player.right=False
 
-        self.clear()
+    def update(self,dt):
+        if self.game_states[self.move_state]:
+            self.spr_update()
+            self.player.move()
+            self.player.set_bound()
+            self.clear()
 
 if __name__=="__main__":
     win=GameWindow(800,800,resizable=False)
