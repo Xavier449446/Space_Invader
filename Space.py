@@ -3,15 +3,16 @@ from pyglet.window import key
 from pyglet.text import Label
 import random
 import pyglet
+
+
 #Koster Xmas Special
 class Laser:
-    def __init__(self,image,x_pos,y_pos):
+    def __init__(self,image,x_pos,y_pos,speed):
         self.image=image
         self.x=x_pos
         self.y=y_pos
         self.spr=pyglet.sprite.Sprite(img=self.image, x= self.x , y= self.y)
-        self._laser_rate=10
-        self.laser_speed=5
+        self.laser_speed=speed
     def move(self):
         self.spr.y+=self.laser_speed
     def draw(self):
@@ -21,8 +22,8 @@ class Enemy:
     def __init__(self,image):
         self.image_name=image
         self.image=pyglet.image.load(self.image_name)
-        if image_name=='enem2.png':
-            self.image_grid=pyglet.image.ImageGrid(self.image, row=1,column=8,item_width=100,item_height==100)
+        if self.image_name=='enem2.png':
+            self.image_grid=pyglet.image.ImageGrid(self.image,1,8,100,100)
             self.health=200
             self.speed=5
         else :
@@ -37,8 +38,11 @@ class Enemy:
         self.dire=random.choice(self.dir)
     def draw(self):
         self.sprite.draw()
-    def move(self):
-        self.sprite.x += (self.speed * self.dire )
+    def move(self,dt):
+        self.sprite.x += (self.speed * self.dire )+dt
+    def bound(self):
+        if self.sprite.x<=0 or self.sprite.x >=680:
+            self.dire *= -1
 
 
 
@@ -105,22 +109,40 @@ class GameWindow(Window):
 
 # enemies list
         self.enemies=["enem1.png","enem2.png"]
+        self.enemies_list=[]
+        self.enemies_list.append(Enemy("enem2.png"))
+# enemy laser_animation
+        self.enemy_laser=pyglet.image.load("enemy_laser.png")
+        self.enemy_laser_list=[]
+
+
     def laser_draw(self):
+        for laser in self.enemy_laser_list:
+            laser.draw()
         for laser in self.laser_list:
             laser.draw()
     
     def laser_bound(self):
+        for laser in self.enemy_laser_list:
+            if laser.spr.y <= 10:
+                self.enemy_laser_list.remove(laser)
         for laser in self.laser_list:
-            if laser.spr.x >= 780:
+            if laser.spr.y >= 780:
                 self.laser_list.remove(laser)
 
     def laser_move(self):
+        for laser in self.enemy_laser_list:
+            laser.move()
+
         for laser in self.laser_list:
             laser.move()
             
+    def enemy_laser_update(self,dt):
+        for enemy in self.enemies_list:
+            self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=-7))
     def laser_update(self,dt):
         if self.laser_state:
-            self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200)))
+            self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200),speed=5))
 
     def spr_update(self):
         for spr in self.bg_list:
@@ -132,11 +154,21 @@ class GameWindow(Window):
         for spr in self.bg_list:
             spr.draw()
 
+    def enemy_update(self,dt):
+        for enemy in self.enemies_list:
+            enemy.move(dt)
+            enemy.bound()
+
+    def enemy_draw(self):
+        for enemy in self.enemies_list:
+            enemy.draw()
     def on_draw(self):
         self.bg_draw()
-        self.stats.draw()
-        self.player.draw()
         self.laser_draw()
+        self.stats.draw()
+        self.enemy_draw()
+        self.player.draw()
+
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
 
@@ -159,6 +191,7 @@ class GameWindow(Window):
         if self.pause_state[self.move_state]:
             self.spr_update()
             self.player.move(dt)
+            self.enemy_update(dt)
             self.player.set_bound()
             self.laser_move()
             self.laser_bound()
@@ -168,5 +201,6 @@ if __name__=="__main__":
     win=GameWindow(1020,800,resizable=False)
     pyglet.clock.schedule_interval(win.update,1/60)
     pyglet.clock.schedule_interval(win.laser_update,1/5)
+    pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
     pyglet.app.run()
 
