@@ -17,6 +17,29 @@ class Laser:
     def draw(self):
         self.spr.draw()
 
+class Enemy:
+    def __init__(self,image):
+        self.image_name=image
+        self.image=pyglet.image.load(self.image_name)
+        if image_name=='enem2.png':
+            self.image_grid=pyglet.image.ImageGrid(self.image, row=1,column=8,item_width=100,item_height==100)
+            self.health=200
+            self.speed=5
+        else :
+            self.image_grid=pyglet.image.ImageGrid(self.image,1,15,100,100)
+            self.health=100
+            self.speed=4
+       
+        self.texture=pyglet.image.TextureGrid(self.image_grid)
+        self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=True)
+        self.dir=[-1,1]
+        self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(300,700,5))
+        self.dire=random.choice(self.dir)
+    def draw(self):
+        self.sprite.draw()
+    def move(self):
+        self.sprite.x += (self.speed * self.dire )
+
 
 
 class PlayerShip:
@@ -80,6 +103,8 @@ class GameWindow(Window):
 #stats
         self.stats=pyglet.sprite.Sprite(img=pyglet.image.load("stats.png"),x=800,y=200)
 
+# enemies list
+        self.enemies=["enem1.png","enem2.png"]
     def laser_draw(self):
         for laser in self.laser_list:
             laser.draw()
