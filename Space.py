@@ -3,6 +3,21 @@ from pyglet.window import key
 from pyglet.text import Label
 import random
 import pyglet
+#Koster Xmas Special
+class Laser:
+    def __init__(self,image,x_pos,y_pos):
+        self.image=image
+        self.x=x_pos
+        self.y=y_pos
+        self.spr=pyglet.sprite.Sprite(img=self.image, x= self.x , y= self.y)
+        self._laser_rate=10
+        self.laser_speed=5
+    def move(self):
+        self.spr.y+=self.laser_speed
+    def draw(self):
+        self.spr.draw()
+
+
 
 class PlayerShip:
     def __init__(self):
@@ -17,10 +32,10 @@ class PlayerShip:
 
 
     def set_bound(self):
-        if self._ship_spr.x <=0 :
-            self._ship_spr.x=0
-        if self._ship_spr.x >= 800-215:
-            self._ship_spr.x =800-215
+        if self._ship_spr.x <=-80 :
+            self._ship_spr.x=-80
+        if self._ship_spr.x >= 800-135:
+            self._ship_spr.x =800-135
 
 
     def move(self,dt):
@@ -55,12 +70,11 @@ class GameWindow(Window):
         self.player=PlayerShip()
 #game window properties
         self.move_state=1
-        self.game_states=['',True,False]
+        self.pause_state=['',True,False]
         self.pause_lbl=Label(text="Paused",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
 #laser animation
         self.laser_list=[]
-        self._laser_rate=10
-        self.laser_speed=5
+        self.player_laser=pyglet.image.load("laser.png")
         self.laser_state=False
 
 #stats
@@ -72,16 +86,16 @@ class GameWindow(Window):
     
     def laser_bound(self):
         for laser in self.laser_list:
-            if laser.x >= 780:
+            if laser.spr.x >= 780:
                 self.laser_list.remove(laser)
 
-    def laser_move(self,dt):
+    def laser_move(self):
         for laser in self.laser_list:
-            laser.y+=self.laser_speed +dt
-
+            laser.move()
+            
     def laser_update(self,dt):
         if self.laser_state:
-            self.laser_list.append(pyglet.sprite.Sprite(img=pyglet.image.load("laser.png"),x=(self.player._ship_spr.x+107),y=(self.player._ship_spr.y+200)))
+            self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200)))
 
     def spr_update(self):
         for spr in self.bg_list:
@@ -98,7 +112,7 @@ class GameWindow(Window):
         self.stats.draw()
         self.player.draw()
         self.laser_draw()
-        if not self.game_states[self.move_state]:
+        if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
 
     def on_key_press(self,symbol,modifiers):
@@ -117,11 +131,11 @@ class GameWindow(Window):
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=False
     def update(self,dt):
-        if self.game_states[self.move_state]:
+        if self.pause_state[self.move_state]:
             self.spr_update()
             self.player.move(dt)
             self.player.set_bound()
-            self.laser_move(dt)
+            self.laser_move()
             self.laser_bound()
             self.clear()
 
@@ -130,5 +144,4 @@ if __name__=="__main__":
     pyglet.clock.schedule_interval(win.update,1/60)
     pyglet.clock.schedule_interval(win.laser_update,1/5)
     pyglet.app.run()
-
 
