@@ -135,9 +135,9 @@ class GameWindow(Window):
         for laser in self.laser_list:
             laser.draw()
     
-    def enemy_hit(self):
-        for enemy in self.enemies_list:
-            for laser in self.laser_list:
+#    def enemy_hit(self):
+    #    for enemy in self.enemies_list:
+         #   for laser in self.laser_list:
 
 
     def laser_bound(self):
