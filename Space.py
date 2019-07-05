@@ -132,17 +132,12 @@ class GameWindow(Window):
         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
 
 #explosion
-        self.exp_list=[]
-        self.enemhit=False
-        
+
     def laser_draw(self):
         for laser in self.enemy_laser_list:
             laser.draw()
         for laser in self.laser_list:
             laser.draw()
-    def exp_draw(self):
-        for exp in self.exp_list:
-            exp.draw()
     def enemy_hit(self):
         for enemy in self.enemies_list:
             for laser in self.laser_list:
@@ -150,8 +145,6 @@ class GameWindow(Window):
                     enemy.health-=50
                     self.laser_list.remove(laser)
                     if enemy.health <=0 :
-                        self.exp_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
-                        self.enemhit=True
                         self.enemies_list.remove(enemy)
                         self.score += 100
                         print(self.score)
@@ -200,14 +193,9 @@ class GameWindow(Window):
     def on_draw(self):
         self.bg_draw()
         self.laser_draw()
-        self.stats.draw()
         self.enemy_draw()
         self.player.draw()
-        if self.enemhit:
-            self.exp_draw()
-            time.sleep=(1)
-            self.enemhit=False
-
+        self.stats.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
 
@@ -231,7 +219,6 @@ class GameWindow(Window):
             self.spr_update()
             self.player.move(dt)
             self.enemy_update(dt)
-            self.enemy_hit()
             self.player.set_bound()
             self.laser_move()
             self.laser_bound()
