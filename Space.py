@@ -4,7 +4,6 @@ from pyglet.text import Label
 import random
 import pyglet
 
-
 #Koster Xmas Special
 class Laser:
     def __init__(self,image,x_pos,y_pos,speed):
@@ -19,7 +18,7 @@ class Laser:
         self.spr.draw()
 
 class Xplosion:
-    def __init__(self,x_pos,y_pos):
+    def __init__(self,x_pos=0,y_pos=0):
         self.x=x_pos
         self.y=y_pos
         self.image_grid=pyglet.image.ImageGrid(pyglet.image.load("explosion.png"),4,5,96,96)
@@ -47,8 +46,13 @@ class Enemy:
         self.dir=[-1,1]
         self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(300,700,5))
         self.dire=random.choice(self.dir)
+        self.hit=False
     def draw(self):
-        self.sprite.draw()
+        if not self.hit:
+            self.sprite.draw()
+        else:
+            pass
+
     def move(self,dt):
         self.sprite.x += (self.speed * self.dire )+dt
     def bound(self):
@@ -129,17 +133,24 @@ class GameWindow(Window):
         self.enemy_laser=pyglet.image.load("enemy_laser.png")
         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
         
-
     def laser_draw(self):
         for laser in self.enemy_laser_list:
             laser.draw()
         for laser in self.laser_list:
             laser.draw()
-    
-#    def enemy_hit(self):
-    #    for enemy in self.enemies_list:
-         #   for laser in self.laser_list:
-
+    def exp_draw(self):
+        for exp in self.exp_list:
+            exp.draw()
+    def enemy_hit(self):
+        for enemy in self.enemies_list:
+            for laser in self.laser_list:
+                if laser.spr.x >= enemy.sprite.x and laser.spr.x <= enemy.sprite.x+100 and laser.spr.y +20 >=enemy.sprite.y and laser.spr.y <= enemy.sprite.y:
+                    enemy.health-=50
+                    self.laser_list.remove(laser)
+                    if enemy.health <=0 :
+                        self.enemies_list.remove(enemy)
+                        self.score += 100
+                        print(self.score)
 
     def laser_bound(self):
         for laser in self.enemy_laser_list:
@@ -212,6 +223,7 @@ class GameWindow(Window):
             self.spr_update()
             self.player.move(dt)
             self.enemy_update(dt)
+            self.enemy_hit()
             self.player.set_bound()
             self.laser_move()
             self.laser_bound()
