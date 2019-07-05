@@ -126,7 +126,8 @@ class GameWindow(Window):
         self.enemies=["enem1.png","enem2.png","enem1.png","enem1.png",'enem1.png']
         self.enemies_list=[]
         self.enemy_laser_list=[]
-        self.enemies_list.append(image=random.choice(self.enemies))
+        self.enemy_laser=pyglet.image.load("enemy_laser.png")
+        self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
         
 
     def laser_draw(self):
@@ -156,8 +157,9 @@ class GameWindow(Window):
             laser.move()
 
     def enemy_laser_update(self,dt):
-        for enemy in self.enemies_list:
-            self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=-7))
+        if self.pause_state[self.move_state]:
+            for enemy in self.enemies_list:
+                self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=-7))
     def laser_update(self,dt):
         if self.laser_state:
             self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200),speed=5))
