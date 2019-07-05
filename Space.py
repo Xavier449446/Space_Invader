@@ -3,7 +3,7 @@ from pyglet.window import key
 from pyglet.text import Label
 import random
 import pyglet
-
+import time
 #Koster Xmas Special
 class Laser:
     def __init__(self,image,x_pos,y_pos,speed):
@@ -28,6 +28,7 @@ class Xplosion:
     def draw(self):
         self.spr.draw()
 
+
 class Enemy:
     def __init__(self,image):
         self.image_name=image
@@ -46,12 +47,9 @@ class Enemy:
         self.dir=[-1,1]
         self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(300,700,5))
         self.dire=random.choice(self.dir)
-        self.hit=False
     def draw(self):
         if not self.hit:
             self.sprite.draw()
-        else:
-            pass
 
     def move(self,dt):
         self.sprite.x += (self.speed * self.dire )+dt
@@ -132,6 +130,10 @@ class GameWindow(Window):
         self.enemy_laser_list=[]
         self.enemy_laser=pyglet.image.load("enemy_laser.png")
         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+
+#explosion
+        self.exp_list=[]
+        self.enemhit=False
         
     def laser_draw(self):
         for laser in self.enemy_laser_list:
@@ -148,6 +150,8 @@ class GameWindow(Window):
                     enemy.health-=50
                     self.laser_list.remove(laser)
                     if enemy.health <=0 :
+                        self.exp_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
+                        self.enemhit=True
                         self.enemies_list.remove(enemy)
                         self.score += 100
                         print(self.score)
@@ -199,6 +203,10 @@ class GameWindow(Window):
         self.stats.draw()
         self.enemy_draw()
         self.player.draw()
+        if self.enemhit:
+            self.exp_draw()
+            time.sleep=(1)
+            self.enemhit=False
 
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
