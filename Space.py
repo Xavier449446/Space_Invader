@@ -36,11 +36,15 @@ class Enemy:
         if self.image_name=='enem2.png':
             self.image_grid=pyglet.image.ImageGrid(self.image,1,8,100,100)
             self.health=200
-            self.speed=5
+            self.speed=6
+            self.score=150
+            self.laser_speed=-9
         else :
             self.image_grid=pyglet.image.ImageGrid(self.image,1,15,100,100)
             self.health=100
+            self.score=50
             self.speed=4
+            self.laser_speed=-6
 
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=True)
@@ -145,8 +149,8 @@ class GameWindow(Window):
                     enemy.health-=50
                     self.laser_list.remove(laser)
                     if enemy.health <=0 :
+                        self.score += enemy.score
                         self.enemies_list.remove(enemy)
-                        self.score += 100
                         self.enemy_kill+=1
                         print(self.score)
                         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
@@ -154,6 +158,7 @@ class GameWindow(Window):
         self.score_lbl.text=str(self.score)
         self.enemy_kill_lbl.text=str(self.enemy_kill)
         self.high_score_lbl.text=str(self.high_score)
+        self.level_lbl.text=str(self.level)
 
     def laser_bound(self):
         for laser in self.enemy_laser_list:
@@ -173,7 +178,7 @@ class GameWindow(Window):
     def enemy_laser_update(self,dt):
         if self.pause_state[self.move_state]:
             for enemy in self.enemies_list:
-                self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=-7))
+                self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=enemy.laser_speed))
     def laser_update(self,dt):
         if self.laser_state:
             self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200),speed=5))
@@ -212,6 +217,7 @@ class GameWindow(Window):
         self.player.key_press(symbol,modifiers)
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=True
+
 
     def on_key_release(self,symbol,modifiers):
         if symbol==key.LEFT or symbol==key.NUM_4:
