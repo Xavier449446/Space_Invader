@@ -2,8 +2,9 @@ from pyglet.window import Window
 from pyglet.window import key
 from pyglet.text import Label
 import random
+import threading
 import pyglet
-import time
+
 #Koster Xmas Special
 class Laser:
     def __init__(self,image,x_pos,y_pos,speed):
@@ -114,6 +115,7 @@ class GameWindow(Window):
         self.pause_state=['',True,False]
         self.pause_lbl=Label(text="Paused",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
         self.game_over=False
+        self.game_over_lbl=Label(text='Game Over',font_size=25,bold=True,x=400,y=400,color=(255,0,0,200),anchor_x='center',anchor_y='center')
 #laser animation
         self.laser_list=[]
         self.player_laser=pyglet.image.load("laser.png")
@@ -162,8 +164,9 @@ class GameWindow(Window):
                 self.enemy_laser_list.remove(laser)
                 if self.player.health <= 0:
                     self.game_over=True
-
-
+    def game_end(self):
+        self.game_over_lbl.draw()
+        self.ending=threading.Timer(10,self.close())
 
     def label_update(self):
         self.score_lbl.text=str(self.score)
@@ -214,12 +217,12 @@ class GameWindow(Window):
             enemy.draw()
     def on_draw(self):
         if self.pause_state[self.move_state] and not self.game_over:
-            self.bg_draw()
+            #self.bg_draw()
             self.laser_draw()
-            self.enemy_draw()
+            #self.enemy_draw()
             self.player.draw()
-            self.stats.draw()
-            self.lbl_batch.draw()
+            #self.stats.draw()
+            #self.lbl_batch.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
         if self.game_over:
@@ -253,7 +256,7 @@ class GameWindow(Window):
             self.label_update()
             self.clear()
         if self.game_over:
-            print("Game Over")
+            self.game_end()
 
 if __name__=="__main__":
     win=GameWindow(1020,800,resizable=False)
