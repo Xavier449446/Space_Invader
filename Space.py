@@ -116,7 +116,7 @@ class GameWindow(Window):
         self.pause_lbl=Label(text="Paused",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
         self.game_over=False
         self.game_over_lbl=Label(text='Game Over',font_size=25,bold=True,x=400,y=400,color=(255,0,0,200),anchor_x='center',anchor_y='center')
-        self.end_game=threading.Timer(10,self.close())
+        
 #laser animation
         self.laser_list=[]
         self.player_laser=pyglet.image.load("laser.png")
@@ -167,6 +167,7 @@ class GameWindow(Window):
                     self.game_over=True
     def game_end(self):
         self.game_over_lbl.draw()
+        self.end_game=threading.Timer(10,self.close())
         self.end_game.start()
 
     def label_update(self):
