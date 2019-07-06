@@ -1,4 +1,4 @@
-from pyglet.window import Window
+        from pyglet.window import Window
 from pyglet.window import key
 from pyglet.text import Label
 import random
@@ -65,25 +65,25 @@ class Enemy:
 
 class PlayerShip:
     def __init__(self):
-        self._ship_spr=pyglet.sprite.Sprite(img=pyglet.image.load("index.png"),x=400,y=10)
+        self.spr=pyglet.sprite.Sprite(img=pyglet.image.load("index.png"),x=400,y=10)
         self.left=False
         self.right=False
         self.health=200
 
     def draw(self):
-        self._ship_spr.draw()
+        self.spr.draw()
     def set_bound(self):
-        if self._ship_spr.x <=-80 :
-            self._ship_spr.x=-80
-        if self._ship_spr.x >= 800-135:
-            self._ship_spr.x =800-135
+        if self.spr.x <=-80 :
+            self.spr.x=-80
+        if self.spr.x >= 800-135:
+            self.spr.x =800-135
 
 
     def move(self,dt):
         if self.right:
-            self._ship_spr.x +=3+dt
+            self.spr.x +=3+dt
         if self.left:
-            self._ship_spr.x -=3+dt
+            self.spr.x -=3+dt
 
 
     def key_press(self,symbol,modifiers):
@@ -154,6 +154,17 @@ class GameWindow(Window):
                         self.enemy_kill+=1
                         print(self.score)
                         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+    def player_hit(self):
+        for laser in self.enemy_laser_list:
+            if laser.spr.x >= self.player.spr.x and laser.spr.x <=self.player.spr.x +214 and laser.spr.y >= self.player.spr.y and laser.spr.y <= self.player.spr.y +215:
+                self.player.health-=100
+                print(self.player.health)
+                self.enemy_laser_list.remove(laser)
+                if self.player.health <= 0:
+                    self.game_over=True
+
+
+
     def label_update(self):
         self.score_lbl.text=str(self.score)
         self.enemy_kill_lbl.text=str(self.enemy_kill)
@@ -181,7 +192,7 @@ class GameWindow(Window):
                 self.enemy_laser_list.append(Laser(image=self.enemy_laser,x_pos=(enemy.sprite.x+50),y_pos=(enemy.sprite.y),speed=enemy.laser_speed))
     def laser_update(self,dt):
         if self.laser_state:
-            self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player._ship_spr.x+107),y_pos=(self.player._ship_spr.y+200),speed=5))
+            self.laser_list.append(Laser(image=self.player_laser,x_pos=(self.player.spr.x+107),y_pos=(self.player.spr.y+200),speed=5))
 
     def spr_update(self):
         for spr in self.bg_list:
@@ -202,14 +213,17 @@ class GameWindow(Window):
         for enemy in self.enemies_list:
             enemy.draw()
     def on_draw(self):
-        self.bg_draw()
-        self.laser_draw()
-        self.enemy_draw()
-        self.player.draw()
-        self.stats.draw()
-        self.lbl_batch.draw()
+        if self.pause_state[self.move_state] and not self.game_over:
+            self.bg_draw()
+            self.laser_draw()
+            self.enemy_draw()
+            self.player.draw()
+            self.stats.draw()
+            self.lbl_batch.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
+        if self.game_over:
+            self.game_over_lbl.draw()
 
     def on_key_press(self,symbol,modifiers):
         if symbol==key.ENTER :
@@ -227,16 +241,19 @@ class GameWindow(Window):
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=False
     def update(self,dt):
-        if self.pause_state[self.move_state]:
+        if self.pause_state[self.move_state] and not self.game_over:
             self.spr_update()
             self.player.move(dt)
             self.enemy_update(dt)
             self.player.set_bound()
-            self.enemy_hit()
+#            self.enemy_hit()
+            self.player_hit()
             self.laser_move()
             self.laser_bound()
             self.label_update()
             self.clear()
+        if self.game_over:
+            print("Game Over")
 
 if __name__=="__main__":
     win=GameWindow(1020,800,resizable=False)
