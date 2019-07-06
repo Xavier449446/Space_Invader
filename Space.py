@@ -120,10 +120,10 @@ class GameWindow(Window):
         self.score=0
         self.high_score=0
         self.level=1
-        self.enemy_kill_lbl=Label(text=str(self.enemy_kill),font_size=12,bold=False, x=600,color=(255,255,0,255),y=900,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.score_lbl=Label(text=str(self.score),font_size=12,bold=False, x=500,color=(255,255,0,255),y=700,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.high_score_lbl=Label(text=str(self.high_score),font_size=12,bold=False, x=600,color=(255,255,0,255),y=900,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.level_lbl=Label(text=str(self.level),font_size=12,bold=False, x=600,color=(255,255,0,255),y=900,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.enemy_kill_lbl=Label(text=str(self.enemy_kill),font_size=12,bold=False, x=900,color=(255,0,0,255),y=570,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.score_lbl=Label(text=str(self.score),font_size=12,bold=False, x=900,color=(255,0,0,255),y=420,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.high_score_lbl=Label(text=str(self.high_score),font_size=12,bold=False, x=900,color=(255,0,0,255),y=680,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.level_lbl=Label(text=str(self.level),font_size=12,bold=False, x=900,color=(255,0,0,255),y=300,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
 # enemies list
         self.enemies=["enem1.png","enem2.png","enem1.png","enem1.png",'enem1.png']
         self.enemies_list=[]
@@ -147,7 +147,13 @@ class GameWindow(Window):
                     if enemy.health <=0 :
                         self.enemies_list.remove(enemy)
                         self.score += 100
+                        self.enemy_kill+=1
                         print(self.score)
+                        self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+    def label_update(self):
+        self.score_lbl.text=str(self.score)
+        self.enemy_kill_lbl.text=str(self.enemy_kill)
+        self.high_score_lbl.text=str(self.high_score)
 
     def laser_bound(self):
         for laser in self.enemy_laser_list:
@@ -196,6 +202,7 @@ class GameWindow(Window):
         self.enemy_draw()
         self.player.draw()
         self.stats.draw()
+        self.lbl_batch.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
 
@@ -205,7 +212,6 @@ class GameWindow(Window):
         self.player.key_press(symbol,modifiers)
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=True
-
 
     def on_key_release(self,symbol,modifiers):
         if symbol==key.LEFT or symbol==key.NUM_4:
@@ -220,8 +226,10 @@ class GameWindow(Window):
             self.player.move(dt)
             self.enemy_update(dt)
             self.player.set_bound()
+            self.enemy_hit()
             self.laser_move()
             self.laser_bound()
+            self.label_update()
             self.clear()
 
 if __name__=="__main__":
