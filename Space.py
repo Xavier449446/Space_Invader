@@ -266,3 +266,5 @@ if __name__=="__main__":
     pyglet.clock.schedule_interval(win.laser_update,1/5)
     pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
     pyglet.app.run()
+
+    
