@@ -1,11 +1,31 @@
+# Not Completed Yet So The performance totally depend on your CPU
+# For further assistance and suggestions contact me
+# Press Space for shooting
+# Enter To pause
+# ESC to Quit
+
+
+
 from pyglet.window import Window
 from pyglet.window import key
 from pyglet.text import Label
 import random
 import threading
 import pyglet
+import sys
+def write(score):
+    with open("Scores.txt",'a') as fwrite:
+        fwrite.write(str(score)+"\n")
 
-#Koster Xmas Special
+def score_get():
+    try :
+        with open("Scores.txt",'r') as fread:
+            scores=[int(a) for a in fread.read()]
+            high_score=max(scores)
+            return high_score
+    except:
+        return 0
+
 class Laser:
     def __init__(self,image,x_pos,y_pos,speed):
         self.image=image
@@ -26,6 +46,7 @@ class Xplosion:
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=False)
         self.spr=pyglet.sprite.Sprite(self.anim,x=self.x,y=self.y)
+        self.state=False
     def draw(self):
         self.spr.draw()
 
@@ -46,7 +67,6 @@ class Enemy:
             self.score=50
             self.speed=4
             self.laser_speed=-6
-
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=True)
         self.dir=[-1,1]
@@ -113,9 +133,9 @@ class GameWindow(Window):
 #game window properties
         self.move_state=1
         self.pause_state=['',True,False]
-        self.pause_lbl=Label(text="Paused",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
+        self.pause_lbl=Label(text="Paused",font_name="Koster Xmas Special",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
         self.game_over=False
-        self.game_over_lbl=Label(text='Game Over',font_size=25,bold=True,x=400,y=400,color=(255,0,0,200),anchor_x='center',anchor_y='center')
+        self.game_over_lbl=Label(text='Game Over',font_name="Koster Xmas Special",font_size=25,bold=True,x=400,y=400,color=(255,0,0,200),anchor_x='center',anchor_y='center')
         
 #laser animation
         self.laser_list=[]
@@ -125,12 +145,12 @@ class GameWindow(Window):
         self.stats=pyglet.sprite.Sprite(img=pyglet.image.load("stats.png"),x=800,y=200)
         self.enemy_kill=0
         self.score=0
-        self.high_score=0
+        self.high_score=score_get()
         self.level=1
-        self.enemy_kill_lbl=Label(text=str(self.enemy_kill),font_size=12,bold=False, x=900,color=(255,0,0,255),y=570,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.score_lbl=Label(text=str(self.score),font_size=12,bold=False, x=900,color=(255,0,0,255),y=420,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.high_score_lbl=Label(text=str(self.high_score),font_size=12,bold=False, x=900,color=(255,0,0,255),y=680,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
-        self.level_lbl=Label(text=str(self.level),font_size=12,bold=False, x=900,color=(255,0,0,255),y=300,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.enemy_kill_lbl=Label(text=str(self.enemy_kill),font_size=12,bold=False,font_name="Koster Xmas Special", x=900,color=(255,0,0,255),y=570,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.score_lbl=Label(text=str(self.score),font_size=12,bold=False, x=900,color=(255,0,0,255),font_name="Koster Xmas Special",y=420,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.high_score_lbl=Label(text=str(self.high_score),font_size=12,font_name="Koster Xmas Special",bold=False, x=900,color=(255,0,0,255),y=680,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
+        self.level_lbl=Label(text=str(self.level),font_name="Koster Xmas Special",font_size=12,bold=False, x=900,color=(255,0,0,255),y=300,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
 # enemies list
         self.enemies=["enem1.png","enem2.png","enem1.png","enem1.png",'enem1.png']
         self.enemies_list=[]
@@ -139,6 +159,25 @@ class GameWindow(Window):
         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
 
 #explosion
+        explosion_list=[]
+
+    def exp_remove(self):
+        if self.explosion_list:
+            for exp in self.explosion_list:
+                if exp.state:
+                    self.explosion_list.remove(exp)
+        else:
+            pass
+    def exp_draw(self):
+        if self.explosion_list:
+            for exp in self.explosion_list:
+                exp.draw()
+                self.new_thread=threading.Timer(1.8,self.exp_remove)
+                self.new_thread.start()
+                self.new_thread.join()
+                self.new_thread.cancel()
+        else:
+            pass
 
     def laser_draw(self):
         for laser in self.enemy_laser_list:
@@ -153,22 +192,31 @@ class GameWindow(Window):
                     self.laser_list.remove(laser)
                     if enemy.health <=0 :
                         self.score += enemy.score
+                        self.explosion_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
                         self.enemies_list.remove(enemy)
                         self.enemy_kill+=1
-                        print(self.score)
                         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
     def player_hit(self):
         for laser in self.enemy_laser_list:
             if laser.spr.x >= self.player.spr.x and laser.spr.x <=self.player.spr.x +214 and laser.spr.y >= self.player.spr.y and laser.spr.y <= self.player.spr.y +215:
                 self.player.health-=100
-                print(self.player.health)
                 self.enemy_laser_list.remove(laser)
                 if self.player.health <= 0:
+                    self.explosion_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
                     self.game_over=True
     def game_end(self):
-        self.game_over_lbl.draw()
-        self.end_game=threading.Timer(10,self.close())
-        self.end_game.start()
+
+        try:
+            write(self.score)
+            self.game_over_lbl.draw()
+            self.end_game=threading.Timer(10,self.close())
+            self.end_game_2=threading.Timer(10,sys.exit)
+            self.end_game_2.start()
+            self.end_game.start()
+        except TypeError:
+            write(self.score)
+            sys.exit
+            pass
 
     def label_update(self):
         self.score_lbl.text=str(self.score)
@@ -219,15 +267,17 @@ class GameWindow(Window):
             enemy.draw()
     def on_draw(self):
         if self.pause_state[self.move_state] and not self.game_over:
-            #self.bg_draw()
+            self.bg_draw()
+            self.exp_draw()
             self.laser_draw()
-            #self.enemy_draw()
+            self.enemy_draw()
             self.player.draw()
-            #self.stats.draw()
-            #self.lbl_batch.draw()
+            self.stats.draw()
+            self.lbl_batch.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
         if self.game_over:
+            self.exp_draw()
             self.game_over_lbl.draw()
 
     def on_key_press(self,symbol,modifiers):
@@ -236,6 +286,8 @@ class GameWindow(Window):
         self.player.key_press(symbol,modifiers)
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=True
+        if symbol==key.ESC :
+            self.game_over=True
 
 
     def on_key_release(self,symbol,modifiers):
@@ -251,7 +303,7 @@ class GameWindow(Window):
             self.player.move(dt)
             self.enemy_update(dt)
             self.player.set_bound()
-#            self.enemy_hit()
+            self.enemy_hit()
             self.player_hit()
             self.laser_move()
             self.laser_bound()
@@ -266,5 +318,3 @@ if __name__=="__main__":
     pyglet.clock.schedule_interval(win.laser_update,1/5)
     pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
     pyglet.app.run()
-
-    
