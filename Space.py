@@ -159,7 +159,7 @@ class GameWindow(Window):
         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
 
 #explosion
-        explosion_list=[]
+        self.explosion_list=[]
 
     def exp_remove(self):
         if self.explosion_list:
@@ -172,7 +172,7 @@ class GameWindow(Window):
         if self.explosion_list:
             for exp in self.explosion_list:
                 exp.draw()
-                self.new_thread=threading.Timer(1.8,self.exp_remove)
+                self.new_thread=threading.Timer(1.5,self.exp_remove())
                 self.new_thread.start()
                 self.new_thread.join()
                 self.new_thread.cancel()
@@ -266,6 +266,7 @@ class GameWindow(Window):
         for enemy in self.enemies_list:
             enemy.draw()
     def on_draw(self):
+        self.clear()
         if self.pause_state[self.move_state] and not self.game_over:
             self.bg_draw()
             self.exp_draw()
