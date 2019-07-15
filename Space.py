@@ -1,10 +1,5 @@
-# Not Completed Yet So The performance totally depend on your CPU
-# For further assistance and suggestions contact me
-# Press Space for shooting
-# Enter To pause
-# ESC to Quit
-
-
+import time
+start_time=time.perf_counter()
 
 from pyglet.window import Window
 from pyglet.window import key
@@ -13,21 +8,28 @@ import random
 import threading
 import pyglet
 import sys
-def write(score):
-    with open("Scores.txt",'a') as fwrite:
-        fwrite.write(str(score)+"\n")
 
+
+def time_wr(time):
+    with open("Time.txt",'a') as tim:
+        tim.write(str(time)+"\n")
+    
+
+def write(score):
+    with open("Scores.txt",'a') as write:
+        write.write(str(score)+"\n")
 def score_get():
     try :
-        with open("Scores.txt",'r') as fread:
-            scores=[int(a) for a in fread.read()]
+        with open("Scores.txt",'r') as read:
+            scores=[int(a) for a in read.read()]
             high_score=max(scores)
             return high_score
     except:
         return 0
 
+
 class Laser:
-    def __init__(self,image,x_pos,y_pos,speed):
+    def __init__(self,x_pos,y_pos,image,speed):
         self.image=image
         self.x=x_pos
         self.y=y_pos
@@ -119,7 +121,8 @@ class PlayerShip:
 
 
 class GameWindow(Window):
-    def __init__(self,*args,**kwargs):
+    end_time=0
+    def __init__(self,start_time,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self.set_caption("Xavier's Game")
         self.set_location(300,200)
@@ -160,6 +163,10 @@ class GameWindow(Window):
 
 #explosion
         self.explosion_list=[]
+    @classmethod
+    def time_ret(cls):
+        cls.end_time+=time.perf_counter()
+        return cls.end_time
 
     def exp_remove(self):
         if self.explosion_list:
@@ -172,7 +179,7 @@ class GameWindow(Window):
         if self.explosion_list:
             for exp in self.explosion_list:
                 exp.draw()
-                self.new_thread=threading.Timer(1.5,self.exp_remove())
+                self.new_thread=threading.Timer(1.5,self.exp_remove)
                 self.new_thread.start()
                 self.new_thread.join()
                 self.new_thread.cancel()
@@ -202,12 +209,10 @@ class GameWindow(Window):
                 self.player.health-=100
                 self.enemy_laser_list.remove(laser)
                 if self.player.health <= 0:
-                    self.explosion_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
+                    self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
                     self.game_over=True
     def game_end(self):
-
         try:
-            write(self.score)
             self.game_over_lbl.draw()
             self.end_game=threading.Timer(10,self.close())
             self.end_game_2=threading.Timer(10,sys.exit)
@@ -282,12 +287,14 @@ class GameWindow(Window):
             self.game_over_lbl.draw()
 
     def on_key_press(self,symbol,modifiers):
+        print(symbol)
         if symbol==key.ENTER :
             self.move_state*=-1
         self.player.key_press(symbol,modifiers)
         if symbol==key.SPACE or symbol==key.NUM_5 :
             self.laser_state=True
-        if symbol==key.ESC :
+        if symbol==key.ESCAPE :
+            print("Yes")
             self.game_over=True
 
 
@@ -312,10 +319,10 @@ class GameWindow(Window):
             self.clear()
         if self.game_over:
             self.game_end()
-
 if __name__=="__main__":
-    win=GameWindow(1020,800,resizable=False)
+    win=GameWindow(1020,700,resizable=False,)
     pyglet.clock.schedule_interval(win.update,1/60)
     pyglet.clock.schedule_interval(win.laser_update,1/5)
-    pyglet.clock.schedule_interval(win.enemy_laser_update,2.3)
+    pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
     pyglet.app.run()
+
