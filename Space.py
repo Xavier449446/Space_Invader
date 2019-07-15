@@ -1,5 +1,4 @@
 import time
-start_time=time.perf_counter()
 
 from pyglet.window import Window
 from pyglet.window import key
@@ -9,11 +8,6 @@ import threading
 import pyglet
 import sys
 
-
-def time_wr(time):
-    with open("Time.txt",'a') as tim:
-        tim.write(str(time)+"\n")
-    
 
 def write(score):
     with open("Scores.txt",'a') as write:
