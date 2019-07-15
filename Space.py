@@ -157,10 +157,6 @@ class GameWindow(Window):
 
 #explosion
         self.explosion_list=[]
-    @classmethod
-    def time_ret(cls):
-        cls.end_time+=time.perf_counter()
-        return cls.end_time
 
     def exp_remove(self):
         if self.explosion_list:
