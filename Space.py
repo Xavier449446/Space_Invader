@@ -1,4 +1,3 @@
-import time
 from pyglet.window import Window
 from pyglet.window import key
 from pyglet.text import Label
