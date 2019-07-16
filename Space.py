@@ -28,10 +28,17 @@ class Xplosion:
         self.x=x_pos
         self.y=y_pos
         self.state=False
+        self.timer=False
+        self.time=0
+        self.remove=False
         self.image_grid=pyglet.image.ImageGrid(pyglet.image.load("explosion.png"),4,5,96,96)
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=False)
         self.spr=pyglet.sprite.Sprite(self.anim,x=self.x,y=self.y)
+    def timer_start(self):
+        self.time +=0.1
+        if self.time >= 1.7:
+            self.remove=True
     def draw(self):
         self.spr.draw()
 
@@ -51,17 +58,20 @@ class Enemy:
             self.health=100
             self.score=50
             self.speed=4
-            self.laser_speed=-6
+            self.laser_speed=-7
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=True)
         self.dir=[-1,1]
-        self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(300,700,5))
+        self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(400,700,5))
         self.dire=random.choice(self.dir)
     def draw(self):
         self.sprite.draw()
-
+    def level_up(self):
+        self.speed+=1
+        self.laser_speed-=1
     def move(self,dt):
         self.sprite.x += (self.speed * self.dire )+dt
+        self.sprite.y -= 1
     def bound(self):
         if self.sprite.x<=0 or self.sprite.x >=680:
             self.dire *= -1
@@ -74,7 +84,9 @@ class PlayerShip:
         self.left=False
         self.right=False
         self.health=200
-
+        self.speed = 5
+    def level_up(self):
+        self.speed+=1
     def draw(self):
         self.spr.draw()
     def set_bound(self):
@@ -86,9 +98,9 @@ class PlayerShip:
 
     def move(self,dt):
         if self.right:
-            self.spr.x +=3+dt
+            self.spr.x +=self.speed +dt
         if self.left:
-            self.spr.x -=3+dt
+            self.spr.x -=self.speed+dt
 
 
     def key_press(self,symbol,modifiers):
@@ -144,6 +156,12 @@ class GameWindow(Window):
 
 #explosion
         self.explosion_list=[]
+    def level_upgrade(self,dt):
+        if self.score >=300*self.level:
+            self.level+=1
+            self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+        
+
     def score_update(self):
         try:
             with open("Scores.txt",'r') as read:
@@ -156,25 +174,16 @@ class GameWindow(Window):
                 write.write('0\n')
                 self.high_score=0
 
-
-
-    def exp_remove(self):
+    def exp_draw(self):
         if self.explosion_list:
             for exp in self.explosion_list:
-                if exp.state:
+                exp.draw()
+    def exp_handle(self,dt):
+        if self.explosion_list:
+            for exp in self.explosion_list:
+                exp.timer_start()
+                if exp.remove:
                     self.explosion_list.remove(exp)
-        else:
-            pass
-    def exp_draw(self):
-        try :
-            if self.explosion_list:
-                for exp in self.explosion_list:
-                    exp.draw()
-                    exp.state=True
-                    self.new_thread=threading.Timer(1.6,self.exp_remove)
-                    self.new_thread.start()
-        except:
-            pass
 
     def laser_draw(self):
         for laser in self.enemy_laser_list:
@@ -195,12 +204,39 @@ class GameWindow(Window):
                         self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
     def player_hit(self):
         for laser in self.enemy_laser_list:
-            if laser.spr.x >= self.player.spr.x and laser.spr.x <=self.player.spr.x +214 and laser.spr.y >= self.player.spr.y and laser.spr.y <= self.player.spr.y +215:
-                self.player.health-=100
-                self.enemy_laser_list.remove(laser)
-                if self.player.health <= 0:
-                    self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
-                    self.game_over=True
+            if laser.spr.x >= self.player.spr.x and laser.spr.x <=self.player.spr.x +214:
+                if laser.spr.x >= self.player.spr.x and laser.spr.x+5 <= self.player.spr.x+75 and laser.spr.x <= self.player.spr.x+215 and laser.spr.x >= self.player.spr.x +130:
+                    if laser.spr.y >= self.player.spr.y and laser.spr.y <= self.player.spr.y +50:
+                          self.player.health-=100
+                          self.enemies_list.remove(enemy)
+                          if self.player.health <= 0:
+                              self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
+                              self.game_over=True
+                else:
+                    if laser.spr.y >= self.player.spr.y and laser.spr.y <= self.player.spr.y +205:
+                          self.player.health-=100
+                          self.enemy_laser_list.remove(laser)
+                          if self.player.health <= 0:
+                              self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
+                              self.game_over=True                    
+
+        for enemy in self.enemies_list:
+            if enemy.sprite.x >= self.player.spr.x and enemy.sprite.x <=self.player.spr.x +214:
+                if enemy.sprite.x >= self.player.spr.x and enemy.sprite.x+100 <= self.player.spr.x+75 and enemy.sprite.x <= self.player.spr.x+215 and enemy.sprite.x >= self.player.spr +130:
+                    if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +50:
+                          self.player.health-=100
+                          self.enemies_list.remove(enemy)
+                          if self.player.health <= 0:
+                              self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
+                              self.game_over=True
+                else:
+                    if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +205:
+                          self.player.health-=100
+                          self.enemies_list.remove(enemy)
+                          if self.player.health <= 0:
+                              self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
+                              self.game_over=True 
+
     def game_end(self):
         try:
             self.game_over_lbl.draw()
@@ -315,4 +351,6 @@ if __name__=="__main__":
     pyglet.clock.schedule_interval(win.update,1/60)
     pyglet.clock.schedule_interval(win.laser_update,1/5)
     pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
+    pyglet.clock.schedule_interval(win.exp_handle,0.1)
+    pyglet.clock.schedule_interval(win.level_upgrade,5.0)
     pyglet.app.run()
