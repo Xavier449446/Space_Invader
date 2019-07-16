@@ -69,8 +69,7 @@ class Enemy:
         self.sprite=pyglet.sprite.Sprite(self.anim,x=random.randrange(0,700,3),y=random.randrange(300,700,5))
         self.dire=random.choice(self.dir)
     def draw(self):
-        if not self.hit:
-            self.sprite.draw()
+        self.sprite.draw()
 
     def move(self,dt):
         self.sprite.x += (self.speed * self.dire )+dt
