@@ -145,11 +145,17 @@ class GameWindow(Window):
 #explosion
         self.explosion_list=[]
     def score_update(self):
-        with open("Scores.txt",'r') as read:
-            scores=[int(a) for a in read.read().split()]
-            self.high_score=max(scores)
-            if self.score >= self.high_score :
-                self.high_score=self.score
+        try:
+            with open("Scores.txt",'r') as read:
+                scores=[int(a) for a in read.read().split()]
+                self.high_score=max(scores)
+                if self.score >= self.high_score :
+                    self.high_score=self.score
+        except FileNotFoundError:
+            with open("Scores.txt",'x') as write:
+                write.write('0\n')
+                self.high_score=0
+
 
 
     def exp_remove(self):
