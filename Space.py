@@ -166,13 +166,14 @@ class GameWindow(Window):
         else:
             pass
     def exp_draw(self):
-        if self.explosion_list:
-            for exp in self.explosion_list:
-                exp.draw()
-                exp.state=True
-                self.new_thread=threading.Timer(1.6,self.exp_remove)
-                self.new_thread.start()
-        else:
+        try :
+            if self.explosion_list:
+                for exp in self.explosion_list:
+                    exp.draw()
+                    exp.state=True
+                    self.new_thread=threading.Timer(1.6,self.exp_remove)
+                    self.new_thread.start()
+        except:
             pass
 
     def laser_draw(self):
