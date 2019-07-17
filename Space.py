@@ -141,6 +141,7 @@ class GameWindow(Window):
         self.stats=pyglet.sprite.Sprite(img=pyglet.image.load("stats.png"),x=800,y=200)
         self.enemy_kill=0
         self.score=0
+        self.g_count=0
         self.high_score=0
         self.level=1
         self.enemy_kill_lbl=Label(text=str(self.enemy_kill),font_size=12,bold=False,font_name="Koster Xmas Special", x=900,color=(255,0,0,255),y=570,anchor_x='center',anchor_y='center',batch=self.lbl_batch)
@@ -157,7 +158,7 @@ class GameWindow(Window):
 #explosion
         self.explosion_list=[]
     def level_upgrade(self,dt):
-        if self.score >=300*self.level:
+        if self.score >=500*self.level:
             self.level+=1
             self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
         
@@ -238,17 +239,14 @@ class GameWindow(Window):
                               self.game_over=True 
 
     def game_end(self):
-        try:
-            self.game_over_lbl.draw()
-            self.end_game=threading.Timer(3,self.close())
-            self.end_game_2=threading.Timer(3,sys.exit)
-            self.end_game_2.start()
-            self.end_game.start()
-            write(self.score)
-        except TypeError:
-            write(self.score)
-            sys.exit
-            pass
+        write(self.score)
+    def game_countdown(self,dt):
+        if self.game_over:
+            self.g_count+=1
+            if self.g_count == 3:
+                self.close()
+                sys.exit()
+
 
     def label_update(self):
         self.score_lbl.text=str(self.score)
@@ -305,14 +303,15 @@ class GameWindow(Window):
         self.exp_draw()
         self.laser_draw()
         self.enemy_draw()
-        self.player.draw()
+        if not self.game_over:
+            self.player.draw()
         self.stats.draw()
         self.lbl_batch.draw()
         if not self.pause_state[self.move_state]:
             self.pause_lbl.draw()
         if self.game_over:
-            self.exp_draw()
             self.game_over_lbl.draw()
+            
 
     def on_key_press(self,symbol,modifiers):
         if symbol==key.ENTER :
@@ -353,4 +352,5 @@ if __name__=="__main__":
     pyglet.clock.schedule_interval(win.enemy_laser_update,2.96)
     pyglet.clock.schedule_interval(win.exp_handle,0.1)
     pyglet.clock.schedule_interval(win.level_upgrade,5.0)
+    pyglet.clock.schedule_interval(win.game_countdown,1.0)
     pyglet.app.run()
