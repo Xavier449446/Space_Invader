@@ -1,3 +1,4 @@
+
 from pyglet.window import Window
 from pyglet.window import key
 from pyglet.text import Label
@@ -44,20 +45,21 @@ class Xplosion:
 
 
 class Enemy:
-    def __init__(self,image):
+    def __init__(self,image,acce):
         self.image_name=image
+        self.acce=acce
         self.image=pyglet.image.load(self.image_name)
         if self.image_name=='enem2.png':
             self.image_grid=pyglet.image.ImageGrid(self.image,1,8,100,100)
             self.health=200
-            self.speed=6
+            self.speed=6 + self.acce
             self.score=150
             self.laser_speed=-9
         else :
             self.image_grid=pyglet.image.ImageGrid(self.image,1,15,100,100)
             self.health=100
             self.score=50
-            self.speed=4
+            self.speed=4 + self.acce
             self.laser_speed=-7
         self.texture=pyglet.image.TextureGrid(self.image_grid)
         self.anim=pyglet.image.Animation.from_image_sequence(self.texture[0:],0.1,loop=True)
@@ -66,12 +68,11 @@ class Enemy:
         self.dire=random.choice(self.dir)
     def draw(self):
         self.sprite.draw()
-    def level_up(self):
-        self.speed+=1
-        self.laser_speed-=1
+
     def move(self,dt):
         self.sprite.x += (self.speed * self.dire )+dt
         self.sprite.y -= 1
+
     def bound(self):
         if self.sprite.x<=0 or self.sprite.x >=680:
             self.dire *= -1
@@ -79,14 +80,14 @@ class Enemy:
 
 
 class PlayerShip:
-    def __init__(self):
+    def __init__(self,acce):
         self.spr=pyglet.sprite.Sprite(img=pyglet.image.load("index.png"),x=400,y=10)
         self.left=False
         self.right=False
-        self.health=200
-        self.speed = 5
+        self.health=1000
+        self.speed = 5+acce
     def level_up(self):
-        self.speed+=1
+        self.speed+=2
     def draw(self):
         self.spr.draw()
     def set_bound(self):
@@ -117,6 +118,7 @@ class PlayerShip:
 class GameWindow(Window):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
+        self.set_mouse_visible(visible=False)
         self.set_caption("Xavier's Game")
         self.set_location(300,200)
         self.lbl_batch=pyglet.graphics.Batch()
@@ -124,19 +126,21 @@ class GameWindow(Window):
         self.bg_list=[]
         self.bg_list.append(pyglet.sprite.Sprite(img=pyglet.image.load("bg.jpg"),x=0,y=0))
         self.bg_list.append(pyglet.sprite.Sprite(img=pyglet.image.load("bg.jpg"),x=0,y=700))
-#player object
-        self.player=PlayerShip()
+
 #game window properties
+        self.boost=0
         self.move_state=1
         self.pause_state=['',True,False]
         self.pause_lbl=Label(text="Paused",font_name="Koster Xmas Special",font_size=25,bold=True,x=400,color=(255,0,0,200),y=400,anchor_x='center',anchor_y='center')
         self.game_over=False
         self.game_over_lbl=Label(text='Game Over',font_name="Koster Xmas Special",font_size=25,bold=True,x=400,y=400,color=(255,0,0,200),anchor_x='center',anchor_y='center')
-        
+#player object
+        self.player=PlayerShip(acce=self.boost) 
 #laser animation
         self.laser_list=[]
         self.player_laser=pyglet.image.load("laser.png")
         self.laser_state=False
+        self.write_state=False
 #stats
         self.stats=pyglet.sprite.Sprite(img=pyglet.image.load("stats.png"),x=800,y=200)
         self.enemy_kill=0
@@ -153,14 +157,16 @@ class GameWindow(Window):
         self.enemies_list=[]
         self.enemy_laser_list=[]
         self.enemy_laser=pyglet.image.load("enemy_laser.png")
-        self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+        self.enemies_list.append(Enemy(image=random.choice(self.enemies),acce=self.boost))
 
 #explosion
         self.explosion_list=[]
     def level_upgrade(self,dt):
-        if self.score >=500*self.level:
+        if self.score >=300*self.level:
             self.level+=1
-            self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+            self.boost+=0.3
+            self.player.level_up()
+            self.enemies_list.append(Enemy(image=random.choice(self.enemies),acce=self.boost))
         
 
     def score_update(self):
@@ -174,6 +180,8 @@ class GameWindow(Window):
             with open("Scores.txt",'x') as write:
                 write.write('0\n')
                 self.high_score=0
+        except ValueError:
+            self.high_score=0
 
     def exp_draw(self):
         if self.explosion_list:
@@ -202,7 +210,10 @@ class GameWindow(Window):
                         self.explosion_list.append(Xplosion(enemy.sprite.x,enemy.sprite.y))
                         self.enemies_list.remove(enemy)
                         self.enemy_kill+=1
-                        self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+                        self.enemies_list.append(Enemy(image=random.choice(self.enemies),acce=self.boost))
+            if enemy.sprite.y <= self.player.spr.y+200:
+                self.enemies_list.remove(enemy)
+                self.enemies_list.append(Enemy(image=random.choice(self.enemies),acce=self.boost))
     def player_hit(self):
         for laser in self.enemy_laser_list:
             if laser.spr.x >= self.player.spr.x and laser.spr.x <=self.player.spr.x +214:
@@ -224,9 +235,10 @@ class GameWindow(Window):
         for enemy in self.enemies_list:
             if enemy.sprite.x >= self.player.spr.x and enemy.sprite.x <=self.player.spr.x +214:
                 if enemy.sprite.x >= self.player.spr.x and enemy.sprite.x+100 <= self.player.spr.x+75 and enemy.sprite.x <= self.player.spr.x+215 and enemy.sprite.x >= self.player.spr +130:
-                    if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +50:
+                    if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +200:
                           self.player.health-=100
                           self.enemies_list.remove(enemy)
+                          self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
                           if self.player.health <= 0:
                               self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
                               self.game_over=True
@@ -234,6 +246,7 @@ class GameWindow(Window):
                     if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +205:
                           self.player.health-=100
                           self.enemies_list.remove(enemy)
+                          self.enemies_list.append(Enemy(random.choice(self.enemies)))
                           if self.player.health <= 0:
                               self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
                               self.game_over=True 
@@ -243,7 +256,8 @@ class GameWindow(Window):
     def game_countdown(self,dt):
         if self.game_over:
             self.g_count+=1
-            if self.g_count == 3:
+            if self.g_count == 1:
+                pyglet.app.exit()
                 self.close()
                 sys.exit()
 
@@ -344,7 +358,9 @@ class GameWindow(Window):
             self.enemy_update(dt)
             self.clear()
         if self.game_over:
-            self.game_end()
+            if not self.write_state:
+                self.game_end()
+                self.write_state=True
 if __name__=="__main__":
     win=GameWindow(width=1020,height=800,resizable=False)
     pyglet.clock.schedule_interval(win.update,1/60)
