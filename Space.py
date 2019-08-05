@@ -238,7 +238,7 @@ class GameWindow(Window):
                     if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +200:
                           self.player.health-=100
                           self.enemies_list.remove(enemy)
-                          self.enemies_list.append(Enemy(image=random.choice(self.enemies)))
+                          self.enemies_list.append(Enemy(image=random.choice(self.enemies),acce=self.boost))
                           if self.player.health <= 0:
                               self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
                               self.game_over=True
@@ -246,7 +246,7 @@ class GameWindow(Window):
                     if enemy.sprite.y >= self.player.spr.y and enemy.sprite.y <= self.player.spr.y +205:
                           self.player.health-=100
                           self.enemies_list.remove(enemy)
-                          self.enemies_list.append(Enemy(random.choice(self.enemies)))
+                          self.enemies_list.append(Enemy(random.choice(self.enemies),self.boost))
                           if self.player.health <= 0:
                               self.explosion_list.append(Xplosion(self.player.spr.x,self.player.spr.y))
                               self.game_over=True 
